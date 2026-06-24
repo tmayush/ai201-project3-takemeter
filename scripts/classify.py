@@ -25,8 +25,8 @@ MODEL_DIR = "takemeter-model"
 # Demo posts for the video. "expect" = my human label, for narration. The first three
 # are clear-cut; the last two are the kinds of comment the model tends to miss.
 DEMO_POSTS = [
-    ("Stop shooting while moving — your bullets only land when you're fully stopped. "
-     "Practice counter-strafing in the range for 10 min before you queue.", "constructive"),
+    ("Stop shooting while moving, counter-strafe first. Your first bullet is only "
+     "accurate when you're stopped.", "constructive"),
     ("honestly ranked has felt so miserable this whole act lol", "neutral"),
     ("you're hardstuck iron for a reason, uninstall and stop queuing with us trash", "toxic"),
     ("he has 340k followers mostly from fortnite so he loses a lot every day", "toxic"),

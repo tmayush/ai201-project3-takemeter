@@ -64,11 +64,14 @@ Cleaning happens in `scripts/build_csv.py`: I strip quote blocks, `u/` and `@` m
 the standalone comment, with no parent context glued on.
 
 For labeling, I had gpt-4o-mini do a first pass against the rubric
-(`scripts/label_bootstrap.py`) and then reviewed the labels by hand against the edge
-cases. I used gpt-4o-mini on purpose, because the baseline is Groq's llama-3.3-70b. If
-the same model that I'm grading also wrote the labels, the comparison would be rigged.
-(One funny side effect: Azure's content filter refused to process a handful of the
-nastiest comments at all, which is its own kind of `toxic` signal.)
+(`scripts/label_bootstrap.py`), then spot-checked the results by hand, going toxic-first
+since that's where the draft was least reliable. I agreed with most of the calls and
+left the labels as the model drafted them, which means there's some residual noise in
+`toxic` that I come back to in the evaluation. I used gpt-4o-mini on purpose, because the
+baseline is Groq's llama-3.3-70b. If the same model that I'm grading also wrote the
+labels, the comparison would be rigged. (One funny side effect: Azure's content filter
+refused to process a handful of the nastiest comments at all, which is its own kind of
+`toxic` signal.)
 
 `toxic` came out to about 16% of the 616, so I downsampled the two majority classes to
 130 each (seed 42) and kept every toxic example. That gets every class over the 20% mark.
@@ -211,7 +214,7 @@ predicted label and the model's confidence:
 
 | Post | Predicted | Confidence | Right? |
 |---|---|---|---|
-| "Stop shooting while moving, counter-strafe first. Your first bullet is only accurate when you're stopped." | constructive | 75% | yes |
+| "Stop shooting while moving, counter-strafe first. Your first bullet is only accurate when you're stopped." | constructive | 68% | yes |
 | "you're hardstuck iron for a reason, uninstall and stop queuing with us trash" | toxic | 52% | yes |
 | "honestly ranked has felt so miserable this whole act lol" | toxic | 48% | no (neutral) |
 | "he has 340k followers mostly from fortnite so he loses a lot every day" | neutral | 41% | no (toxic) |
@@ -219,7 +222,7 @@ predicted label and the model's confidence:
 
 The correct one worth explaining is the first. It's straight gameplay advice with a
 concrete instruction (counter-strafe, stop before firing), and the model lands on
-`constructive` at 75%, its highest confidence of the five. That's the case where the
+`constructive` at 68%, its highest confidence of the five. That's the case where the
 words and the intent line up: helpful content, helpful vocabulary, nothing adversarial.
 Notice how much lower the confidence is on the others (41 to 52%) once tone and intent
 stop matching the surface words.
@@ -280,11 +283,13 @@ updated to match so it still reproduces on Colab.
 I used AI tools in a few specific places and reviewed the output each time.
 
 - Annotation (disclosed): I had `gpt-4o-mini` (Azure) draft a first-pass label for all 616
-  comments against my `planning.md` rubric. I then went through them myself. I picked
-  gpt-4o-mini on purpose because the baseline is Groq's llama-3.3-70b, and reusing the
-  baseline model as the label source would have rigged the comparison. The drafts were
-  decent but over-eager on `toxic`, tagging mild sarcasm and self-deprecation as hostile,
-  which is the main thing I corrected.
+  comments against my `planning.md` rubric. I then spot-checked them myself, toxic-first.
+  I picked gpt-4o-mini on purpose because the baseline is Groq's llama-3.3-70b, and reusing
+  the baseline model as the label source would have rigged the comparison. The drafts were
+  decent but over-eager on `toxic`, tagging some mild sarcasm and self-deprecation as
+  hostile. I agreed with most of them and kept the committed labels mostly as the model
+  produced them, so that residual noise is part of why `toxic` is the weakest class, which
+  I flag in the evaluation rather than papering over.
 - Pipeline and debugging: I used Claude Code to write the data scripts (scraper, label
   bootstrap, CSV builder, local trainer) and to help debug why the fine-tuned model was
   scoring `toxic` at F1 0.00. The useful catch there was that the starter's
