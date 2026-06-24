@@ -7,6 +7,19 @@ on Groq so there's something to compare the fine-tuned model against.
 
 The full taxonomy, edge-case rules, and decisions are in [`planning.md`](planning.md).
 
+How the code is laid out, since there's a notebook and some scripts:
+
+- `takemeter.ipynb` is the full train / evaluate / baseline pipeline, meant to run on
+  Colab with a T4 GPU. It's the canonical notebook.
+- `scripts/run_local.py` mirrors that notebook exactly (same split, same seed, same
+  hyperparameters) so it runs on a local GPU. This is the one I actually ran, and it's
+  what produced the committed `confusion_matrix.png` and `evaluation_results.json`. The
+  notebook reproduces the same thing on Colab, give or take small hardware variance.
+- `scripts/scrape_arctic.py`, `label_bootstrap.py`, and `build_csv.py` are the data
+  pipeline (scrape, draft labels, clean and balance to the CSV).
+- `scripts/classify.py` is a small inference helper that loads the trained model and
+  prints a label and confidence for any post. It's what I use in the demo video.
+
 ## 1. Community and task
 
 I picked r/VALORANT and r/ValorantCompetitive because I've played the game for a couple
