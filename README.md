@@ -5,6 +5,8 @@ discourse health, meaning how a comment adds to (or wrecks) a conversation rathe
 whether its opinion is right. I also run a zero-shot `llama-3.3-70b-versatile` baseline
 on Groq so there's something to compare the fine-tuned model against.
 
+Demo video (3-5 min): https://youtu.be/Nc5eB1aua3g
+
 The full taxonomy, edge-case rules, and decisions are in [`planning.md`](planning.md).
 
 How the code is laid out, since there's a notebook and some scripts:
