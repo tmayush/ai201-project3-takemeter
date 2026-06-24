@@ -1,0 +1,120 @@
+{
+  "baseline_accuracy": 0.7826,
+  "finetuned_accuracy": 0.5818,
+  "improvement": -0.2008,
+  "test_set_size": 55,
+  "baseline_parseable": 46,
+  "label_map": {
+    "constructive": 0,
+    "neutral": 1,
+    "toxic": 2
+  },
+  "model": "distilbert-base-uncased",
+  "per_class_finetuned": {
+    "constructive": {
+      "precision": 0.7272727272727273,
+      "recall": 0.8,
+      "f1-score": 0.7619047619047619,
+      "support": 20.0
+    },
+    "neutral": {
+      "precision": 0.625,
+      "recall": 0.5,
+      "f1-score": 0.5555555555555556,
+      "support": 20.0
+    },
+    "toxic": {
+      "precision": 0.35294117647058826,
+      "recall": 0.4,
+      "f1-score": 0.375,
+      "support": 15.0
+    },
+    "accuracy": 0.5818181818181818,
+    "macro avg": {
+      "precision": 0.5684046345811052,
+      "recall": 0.5666666666666668,
+      "f1-score": 0.5641534391534392,
+      "support": 55.0
+    },
+    "weighted avg": {
+      "precision": 0.5879922216820613,
+      "recall": 0.5818181818181818,
+      "f1-score": 0.5813492063492063,
+      "support": 55.0
+    }
+  },
+  "sample_errors": [
+    {
+      "text": "That\u2019s how i feel. I just need to take the time to learn the spray pattern",
+      "true": "constructive",
+      "pred": "neutral",
+      "confidence": 0.403
+    },
+    {
+      "text": "Hey, MIBR won a map! \u2026. Gotta start somewhere MIBR fans right?",
+      "true": "neutral",
+      "pred": "toxic",
+      "confidence": 0.56
+    },
+    {
+      "text": "Saadhak duelist is not it at all",
+      "true": "toxic",
+      "pred": "neutral",
+      "confidence": 0.502
+    },
+    {
+      "text": "I hate passive value. I hate lurkers. I hate being shot in the back. If I lose a gunfight it's because I failed. If I get shot in the back it's because my enemy knows they're worse than me.",
+      "true": "toxic",
+      "pred": "constructive",
+      "confidence": 0.481
+    },
+    {
+      "text": "Rossy gives Dardoch vibes big time",
+      "true": "neutral",
+      "pred": "toxic",
+      "confidence": 0.469
+    },
+    {
+      "text": "yea ur right my adr is dogshit lmfao hopefully ill improve that soon",
+      "true": "neutral",
+      "pred": "toxic",
+      "confidence": 0.459
+    },
+    {
+      "text": "I think it was the fact the entire 5 man roster was completely unheard of at that time. There was a clip awhile back of C9 Semphis calling out two players from the team for cheating. Then csgo reddit took off with it. I didn't play mitch or relyks when I played cuz I was Hardstuck open/IM and I believe they were in main at that time. In other words I was not that good \ud83d\ude01",
+      "true": "neutral",
+      "pred": "constructive",
+      "confidence": 0.438
+    },
+    {
+      "text": ". My point was to say that if he's hit radiant then he wouldn't be hard stuck ASC but he got boosted to radiant not that all coaches have to be radiant. But he's never had the skills to hit radiant on his own and it shows in some of the coaching advice he gives",
+      "true": "toxic",
+      "pred": "constructive",
+      "confidence": 0.675
+    },
+    {
+      "text": "My super hot take is that Ascent doesn't get the hate it deserves and this community's love for it is the biggest example for how dumb this community is. It's the most basic and boring map in the game (both to play and watch) while being one of if not the most one-side maps in the game depending on the map pool at the time. And while Ascent gets love for being extremely flawed, the community spends all it's energy hating on whatever the newest and/or most complicated maps are in the pool.",
+      "true": "toxic",
+      "pred": "constructive",
+      "confidence": 0.79
+    },
+    {
+      "text": "please just let tuyz be the full time duelist, they don\u00b4t need to run neon 24/7, a bunch of teams are doing fine by just playing jett/raze the new mibr guys just arrived yesterday and probably are jetlaged/didnt have enough prep time, with more time they can be promising (next season, this year is over for them anyway)",
+      "true": "constructive",
+      "pred": "toxic",
+      "confidence": 0.477
+    },
+    {
+      "text": "Thank you for explaining your POV",
+      "true": "constructive",
+      "pred": "neutral",
+      "confidence": 0.468
+    },
+    {
+      "text": "he has 340k followers mostly from fortnite so he loses a lot every day",
+      "true": "toxic",
+      "pred": "neutral",
+      "confidence": 0.41
+    }
+  ]
+}
