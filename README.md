@@ -32,6 +32,18 @@ tricky rulings (helpful but rude, undirected venting, sarcasm) are written down 
 `planning.md`. I settled those before labeling started and then stuck to them, which is
 the only way the labels stay consistent once you're 200 comments deep and tired.
 
+Two examples each:
+
+- `constructive`
+  - "Stop shooting while moving, counter-strafe first. Your first bullet is only accurate when you're fully stopped."
+  - "For Cypher on Bind, drop your cage in the doorway and trip behind it so you still get the rotate info if they push."
+- `neutral`
+  - "honestly ranked has felt so miserable this whole act lol"
+  - "wait is the new episode dropping today or next week?"
+- `toxic`
+  - "you're hardstuck iron for a reason, uninstall and stop queuing with us trash"
+  - "imagine maining Phoenix in 2024 and still going 4/18, actual bot"
+
 ## 3. Data
 
 The comments come from r/VALORANT and r/ValorantCompetitive. I wanted to scrape them
@@ -136,6 +148,35 @@ came back as a clean label (9 didn't parse and got dropped, which is what the no
 does too), while the fine-tuned model is scored on all 55. Same test split, slightly
 different denominators.
 
+### How the baseline was run
+
+The baseline is `llama-3.3-70b-versatile` on Groq, zero-shot, at `temperature=0` and
+`max_tokens=20`. The system prompt gives it the task, the three label definitions, and
+one example each, and tells it to reply with only the label name:
+
+```
+You are classifying comments from the Valorant gaming community (Reddit).
+Judge each comment by DISCOURSE HEALTH, how it contributes to the conversation,
+NOT whether its opinion is correct.
+
+constructive: Adds value, a reasoned argument, helpful advice, real analysis, or a
+respectful answer even when disagreeing.
+Example: "Stop shooting while moving, your bullets only land when you're stopped."
+neutral: On-topic but low-substance and not hostile, chatter, jokes, reactions, plain
+facts, simple questions, or undirected venting.
+Example: "honestly ranked has felt so miserable this act lol"
+toxic: Hostile or corrosive, insults, flaming, personal attacks, contemptuous put-downs.
+Example: "you're hardstuck iron for a reason, uninstall and stop queuing with us trash"
+
+Respond with ONLY the label name: constructive, neutral, or toxic.
+```
+
+I send each test comment as the user message, lowercase the reply, and match it against
+the three label strings (longest first, so a substring can't match the wrong label). If
+the reply doesn't contain any of them it's counted unparseable and dropped from the
+baseline's accuracy. The full prompt and the parsing loop are in `takemeter.ipynb`
+Section 5 and in `scripts/run_local.py`.
+
 ### Per-class metrics (fine-tuned)
 
 | Label | Precision | Recall | F1 | Support |
@@ -149,11 +190,39 @@ different denominators.
 
 ![Confusion matrix](confusion_matrix.png)
 
+Same thing as a table (rows are the true label, columns are what the model predicted):
+
+| true ↓ / pred → | constructive | neutral | toxic |
+|---|---|---|---|
+| **constructive** | 16 | 2 | 2 |
+| **neutral** | 1 | 10 | 9 |
+| **toxic** | 5 | 4 | 6 |
+
 `constructive` is the cleanest row (16 of 20 right). The worst cell is `neutral`
 predicted as `toxic`: 9 of the 20 neutral comments. That's the class weighting showing
 its bill. I pushed the model to reach for `toxic`, and now it slaps that label on
 ordinary chatter whenever a spicy word shows up. `toxic` itself scatters across all three
 predictions, which tells me the model never found a reliable signal for it.
+
+### Sample classifications
+
+Five posts run live through the fine-tuned model (`scripts/classify.py`), showing the
+predicted label and the model's confidence:
+
+| Post | Predicted | Confidence | Right? |
+|---|---|---|---|
+| "Stop shooting while moving, counter-strafe first. Your first bullet is only accurate when you're stopped." | constructive | 75% | yes |
+| "you're hardstuck iron for a reason, uninstall and stop queuing with us trash" | toxic | 52% | yes |
+| "honestly ranked has felt so miserable this whole act lol" | toxic | 48% | no (neutral) |
+| "he has 340k followers mostly from fortnite so he loses a lot every day" | neutral | 41% | no (toxic) |
+| "yea ur right my adr is dogshit lmfao hopefully ill improve that soon" | toxic | 46% | no (neutral) |
+
+The correct one worth explaining is the first. It's straight gameplay advice with a
+concrete instruction (counter-strafe, stop before firing), and the model lands on
+`constructive` at 75%, its highest confidence of the five. That's the case where the
+words and the intent line up: helpful content, helpful vocabulary, nothing adversarial.
+Notice how much lower the confidence is on the others (41 to 52%) once tone and intent
+stop matching the surface words.
 
 ### Three errors, with my read on them
 
@@ -191,6 +260,39 @@ from the other side: the 70B model reads these comments better at 0.78 than mine
 had ~250 noisy examples and mostly memorized the vocabulary. More data and cleaner labels
 on the subtle toxic cases are where I'd go next.
 
+## Spec reflection
+
+One way the spec helped: it pushed label design to the front and gave hard constraints
+(one label per comment, ~90% covered without an "other" bucket, at least 20% per class).
+That forced me to write the edge-case rules in `planning.md` before I touched any data,
+and those rules are the only reason the labels stayed consistent. Without that pressure I
+would have started labeling first and discovered my categories were mushy 150 comments in.
+
+One way I diverged: the spec assumes you scrape Reddit directly and train on Colab. Reddit
+blocked its API from both my machine and my dev environment, so I pulled the same comments
+from the Arctic Shift archive instead, and I trained locally on my own GPU rather than
+Colab. I also added two things the starter didn't have: a fix for the warmup-vs-steps bug,
+and a class-weighted loss to stop the `toxic` class from collapsing. The notebook is
+updated to match so it still reproduces on Colab.
+
+## AI usage
+
+I used AI tools in a few specific places and reviewed the output each time.
+
+- Annotation (disclosed): I had `gpt-4o-mini` (Azure) draft a first-pass label for all 616
+  comments against my `planning.md` rubric. I then went through them myself. I picked
+  gpt-4o-mini on purpose because the baseline is Groq's llama-3.3-70b, and reusing the
+  baseline model as the label source would have rigged the comparison. The drafts were
+  decent but over-eager on `toxic`, tagging mild sarcasm and self-deprecation as hostile,
+  which is the main thing I corrected.
+- Pipeline and debugging: I used Claude Code to write the data scripts (scraper, label
+  bootstrap, CSV builder, local trainer) and to help debug why the fine-tuned model was
+  scoring `toxic` at F1 0.00. The useful catch there was that the starter's
+  `warmup_steps=50` was larger than the total number of training steps (~48), so the
+  learning rate never ramped up. I took that diagnosis, switched to `warmup_ratio` plus
+  more epochs, and made the call to add class-weighted loss and accept slightly lower
+  overall accuracy in exchange for a model that predicts `toxic` at all.
+
 ## Reproduce
 
 ```bash
@@ -204,6 +306,9 @@ uv run python scripts/build_csv.py            # -> data/valorant_takes.csv (361 
 # 4a. train and evaluate locally (needs a GPU + a valid GROQ_API_KEY for the baseline)
 uv run python scripts/run_local.py            # -> confusion_matrix.png, evaluation_results.json
 # 4b. or run takemeter.ipynb on Colab (T4 GPU) with a GROQ_API_KEY secret
+# 5. classify posts with the trained model (used in the demo video)
+uv run python scripts/classify.py                 # built-in demo posts
+uv run python scripts/classify.py "your comment here"
 ```
 
 `scripts/scrape_reddit.py` is the direct Reddit version. I'm keeping it for reference,
